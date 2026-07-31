@@ -32,10 +32,6 @@ jobs:
         yes | sdkmanager --licenses
         sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-    # Pin a Gradle version compatible with cordova-android@12.0.1's
-    # own build scripts (CordovaLib/cordova.gradle uses groovy.util.XmlParser,
-    # which breaks under Gradle 9's bundled Groovy). Without this, the runner's
-    # default system Gradle (9.x) gets used to bootstrap Cordova's wrapper and fails.
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
@@ -48,11 +44,12 @@ jobs:
       run: cordova platform add android@12.0.1
 
     # cordova-plugin-admob-free + ADMOB_APP_ID are already declared in
-    # config.xml and get installed automatically here — no separate
-    # "cordova plugin add" step needed.
+    # config.xml and get installed automatically here.
 
     - name: Build Android Release APK
-      run: cordova build android --release -- --gradleArg=-Xmx2048m
+      env:
+        GRADLE_OPTS: "-Xmx2048m"
+      run: cordova build android --release -- --packageType=apk
 
     - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
