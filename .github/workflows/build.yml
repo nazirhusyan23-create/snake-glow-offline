@@ -22,13 +22,18 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '11'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '7.6'
 
     - name: Install Cordova
       run: npm install -g cordova
 
-    - name: Add Android Platform (Updated)
-      run: cordova platform add android@12.0.0
+    - name: Add Android Platform
+      run: cordova platform add android@10.1.2
 
     - name: Install AdMob Plugin with Variable
       run: cordova plugin add cordova-plugin-admob-free --variable ADMOB_APP_ID="ca-app-pub-9502060049942116~3355184393" --save
