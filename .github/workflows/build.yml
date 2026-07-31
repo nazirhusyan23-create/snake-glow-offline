@@ -43,8 +43,15 @@ jobs:
     - name: Add Android Platform
       run: cordova platform add android@12.0.1
 
-    # cordova-plugin-admob-free + ADMOB_APP_ID are already declared in
-    # config.xml and get installed automatically here.
+    # cordova-plugin-admob-free is unmaintained and still imports the legacy
+    # android.support.annotation.NonNull, which no longer exists under AndroidX
+    # (cordova-android@12 default). This patches the single import to
+    # androidx.annotation.NonNull, already available via androidx.appcompat.
+    # No plugin logic, IDs, or app behavior changes — annotation import only.
+    - name: Patch AdMob plugin for AndroidX compatibility
+      run: |
+        sed -i 's/import android\.support\.annotation\.NonNull;/import androidx.annotation.NonNull;/' \
+          platforms/android/app/src/main/java/name/ratson/cordova/admob/AdMob.java
 
     - name: Build Android Release APK
       env:
