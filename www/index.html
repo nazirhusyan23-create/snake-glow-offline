@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Snake Glow Offline</title>
+  <script src="cordova.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      inset: 0;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 100%;
+      max-height: 900px;
+      background: #03030c;
+      box-shadow: 0 0 80px rgba(0, 243, 255, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #top-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 15;
+    }
+    .hud-card {
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      padding: 6px 10px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 65px;
+    }
+    .hud-card .val {
+      color: #00f3ff;
+      text-shadow: 0 0 10px #00f3ff;
+      font-size: 15px;
+    }
+    .hud-card.level .val { color: #ff007f; text-shadow: 0 0 10px #ff007f; }
+    .hud-card.high .val { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+
+    .btn-leaderboard-top {
+      background: rgba(255, 204, 0, 0.2);
+      border: 1px solid #ffcc00;
+      color: #ffcc00;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-shadow: 0 0 8px #ffcc00;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: radial-gradient(circle at center, #0d0e2e 0%, #020208 100%);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 3, 12, 0.96);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 15px;
+    }
+    .hidden { display: none !important; }
+
+    h1.title {
+      font-size: 24px;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px #00f3ff, 0 0 30px #00f3ff;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    .subtitle {
+      color: #ff007f;
+      text-shadow: 0 0 12px #ff007f;
+      font-size: 12px;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #00f3ff, #0066ff);
+      color: #000;
+      font-weight: 900;
+      font-size: 15px;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.7);
+      text-transform: uppercase;
+      margin-top: 10px;
+      z-index: 101;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      color: #00f3ff;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(10, 15, 30, 0.95);
+      border: 1.5px solid rgba(0, 243, 255, 0.6);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-display {
+      width: 100%;
+      background: #080c18;
+      border: 2px solid #00f3ff;
+      border-radius: 10px;
+      padding: 10px;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 2px;
+      box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+
+    .virtual-keyboard {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      width: 100%;
+    }
+    .key-btn {
+      background: rgba(0, 243, 255, 0.12);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      color: #fff;
+      font-weight: bold;
+      font-size: 13px;
+      padding: 8px 0;
+      flex: 1;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .key-btn:active {
+      background: #00f3ff;
+      color: #000;
+      box-shadow: 0 0 12px #00f3ff;
+    }
+    .key-btn.wide { flex: 2; background: rgba(255, 0, 127, 0.2); border-color: #ff007f; }
+
+    .leaderboard-box {
+      width: 100%;
+      max-width: 320px;
+      background: rgba(10, 15, 30, 0.9);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 16px;
+      padding: 15px;
+      margin-bottom: 15px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .lb-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    #dpad {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 160px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      z-index: 10;
+      opacity: 0.5;
+    }
+    .dbtn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00f3ff;
+      font-size: 20px;
+    }
+    .dbtn-up { grid-column: 2; grid-row: 1; }
+    .dbtn-left { grid-column: 1; grid-row: 2; }
+    .dbtn-right { grid-column: 3; grid-row: 2; }
+    .dbtn-down { grid-column: 2; grid-row: 3; }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="top-bar">
+    <div class="hud-card">SCORE <span class="val" id="score-val">0</span></div>
+    <div class="hud-card level">LEVEL <span class="val" id="level-val">1</span></div>
+    <button class="btn-leaderboard-top" id="top-lb-btn">🏆 RANK</button>
+    <div class="hud-card high">BEST <span class="val" id="high-val">0</span></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="dpad">
+    <div class="dbtn dbtn-up" id="btn-up">▲</div>
+    <div class="dbtn dbtn-left" id="btn-left">◄</div>
+    <div class="dbtn dbtn-right" id="btn-right">►</div>
+    <div class="dbtn dbtn-down" id="btn-down">▼</div>
+  </div>
+
+  <div id="login-screen" class="overlay">
+    <h1 class="title">SNAKE GLOW OFFLINE</h1>
+    <div class="subtitle">ENTER PLAYER NAME</div>
+    <div class="login-box">
+      <div id="name-display" class="input-display">PLAYER</div>
+
+      <div class="virtual-keyboard">
+        <div class="kb-row">
+          <div class="key-btn" data-key="Q">Q</div><div class="key-btn" data-key="W">W</div><div class="key-btn" data-key="E">E</div><div class="key-btn" data-key="R">R</div><div class="key-btn" data-key="T">T</div><div class="key-btn" data-key="Y">Y</div><div class="key-btn" data-key="U">U</div><div class="key-btn" data-key="I">I</div><div class="key-btn" data-key="O">O</div><div class="key-btn" data-key="P">P</div>
+        </div>
+        <div class="kb-row">
+          <div class="key-btn" data-key="A">A</div><div class="key-btn" data-key="S">S</div><div class="key-btn" data-key="D">D</div><div class="key-btn" data-key="F">F</div><div class="key-btn" data-key="G">G</div><div class="key-btn" data-key="H">H</div><div class="key-btn" data-key="J">J</div><div class="key-btn" data-key="K">K</div><div class="key-btn" data-key="L">L</div>
+        </div>
+        <div class="kb-row">
+          <div class="key-btn" data-key="Z">Z</div><div class="key-btn" data-key="X">X</div><div class="key-btn" data-key="C">C</div><div class="key-btn" data-key="V">V</div><div class="key-btn" data-key="B">B</div><div class="key-btn" data-key="N">N</div><div class="key-btn" data-key="M">M</div>
+        </div>
+        <div class="kb-row">
+          <div class="key-btn wide" id="key-del">⌫ DEL</div>
+          <div class="key-btn" data-key=" ">SPACE</div>
+          <div class="key-btn wide" id="key-clr">CLEAR</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-action" id="login-btn">SAVE & CONTINUE</button>
+  </div>
+
+  <div id="start-screen" class="overlay hidden">
+    <h1 class="title">SNAKE GLOW</h1>
+    <div class="subtitle">OFFLINE ARCADE</div>
+    <div style="background: rgba(10,15,30,0.8); padding: 15px 25px; border-radius: 12px; border: 1px solid rgba(0, 243, 255, 0.3); text-align: center; margin-bottom: 15px;">
+      <p id="welcome-msg" style="color:#00f3ff; font-size: 16px; font-weight:bold; margin-bottom: 6px;"></p>
+      <button class="btn-secondary" id="change-name-btn">✏️ Change Player Name</button>
+    </div>
+    <button class="btn-action" id="start-btn">PLAY GAME</button>
+  </div>
+
+  <div id="leaderboard-screen" class="overlay hidden">
+    <h1 class="title" style="color: #ffcc00;">OFFLINE RANKINGS</h1>
+    <div class="subtitle">PLAYER HISTORY</div>
+    <div class="leaderboard-box" id="lb-list"></div>
+    <button class="btn-action" id="close-lb-btn">BACK</button>
+  </div>
+
+  <div id="gameover-screen" class="overlay hidden">
+    <h1 class="title" style="color: #ff007f;">GAME OVER</h1>
+    <div class="subtitle" id="final-stats">SCORE: 0 | LEVEL: 1</div>
+    <button class="btn-action" id="restart-btn">TRY AGAIN</button>
+  </div>
+</div>
+
+<script>
+  const ADMOB_CONFIG = {
+    bannerId: 'ca-app-pub-9502060049942116/5523162670',
+    interstitialId: 'ca-app-pub-9502060049942116/9079264305'
+  };
+
+  function initAdMob() {
+    if (window.admob) {
+      window.admob.banner.config({
+        id: ADMOB_CONFIG.bannerId,
+        isTesting: false,
+        autoShow: true
+      });
+      window.admob.banner.prepare();
+
+      window.admob.interstitial.config({
+        id: ADMOB_CONFIG.interstitialId,
+        isTesting: false,
+        autoShow: false
+      });
+      window.admob.interstitial.prepare();
+    }
+  }
+
+  function showInterstitialAd() {
+    if (window.admob) {
+      window.admob.interstitial.show();
+      window.admob.interstitial.prepare();
+    }
+  }
+
+  document.addEventListener('deviceready', initAdMob, false);
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      if (typeof r === 'undefined') r = 5;
+      if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+      this.beginPath();
+      this.moveTo(x + r.tl, y);
+      this.lineTo(x + w - r.tr, y);
+      this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+      this.lineTo(x + w, y + h - r.br);
+      this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+      this.lineTo(x + r.bl, y + h);
+      this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+      this.lineTo(x, y + r.tl);
+      this.quadraticCurveTo(x, y, x + r.tl, y);
+      this.closePath();
+      return this;
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const loginOverlay = document.getElementById('login-screen');
+    const startOverlay = document.getElementById('start-screen');
+    const lbOverlay = document.getElementById('leaderboard-screen');
+    const nameDisplay = document.getElementById('name-display');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 20;
+
+    let currentEnteredName = "PLAYER";
+
+    document.querySelectorAll('.virtual-keyboard .key-btn[data-key]').forEach(btn => {
+      btn.onclick = function() {
+        if (currentEnteredName.length < 10) {
+          if (currentEnteredName === "PLAYER") currentEnteredName = "";
+          currentEnteredName += this.getAttribute('data-key');
+          nameDisplay.innerText = currentEnteredName || "ENTER NAME";
+        }
+      };
+    });
+
+    document.getElementById('key-del').onclick = function() {
+      if (currentEnteredName.length > 0 && currentEnteredName !== "PLAYER") {
+        currentEnteredName = currentEnteredName.slice(0, -1);
+        nameDisplay.innerText = currentEnteredName || "ENTER NAME";
+      }
+    };
+
+    document.getElementById('key-clr').onclick = function() {
+      currentEnteredName = "";
+      nameDisplay.innerText = "ENTER NAME";
+    };
+
+    let genuinePlayerName = localStorage.getItem('sg_name') || "";
+    let highScore = parseInt(localStorage.getItem('sg_high'), 10) || 0;
+    let leaderboardData = [];
+
+    try {
+      leaderboardData = JSON.parse(localStorage.getItem('sg_lb')) || [];
+    } catch(e) { leaderboardData = []; }
+
+    document.getElementById('high-val').innerText = highScore;
+
+    function renderLeaderboard() {
+      const lbBox = document.getElementById('lb-list');
+      lbBox.innerHTML = '';
+      if (leaderboardData.length === 0) {
+        lbBox.innerHTML = '<div style="color:#aaa; text-align:center; padding:15px; font-size:12px;">No Scores Saved Yet!</div>';
+        return;
+      }
+      leaderboardData.sort((a, b) => b.score - a.score);
+      leaderboardData.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'lb-row';
+        row.innerHTML = `<span>#${index + 1} ${item.name}</span><span>${item.score} pts</span>`;
+        lbBox.appendChild(row);
+      });
+    }
+
+    function saveAndContinue() {
+      if (!currentEnteredName || currentEnteredName === "ENTER NAME") {
+        currentEnteredName = "PLAYER";
+      }
+      genuinePlayerName = currentEnteredName;
+      localStorage.setItem('sg_name', genuinePlayerName);
+      document.getElementById('welcome-msg').innerText = "Player: " + genuinePlayerName;
+
+      loginOverlay.classList.add('hidden');
+      startOverlay.classList.remove('hidden');
+    }
+
+    document.getElementById('login-btn').onclick = saveAndContinue;
+
+    if (genuinePlayerName) {
+      currentEnteredName = genuinePlayerName;
+      nameDisplay.innerText = genuinePlayerName;
+      document.getElementById('welcome-msg').innerText = "Player: " + genuinePlayerName;
+      loginOverlay.classList.add('hidden');
+      startOverlay.classList.remove('hidden');
+    }
+
+    document.getElementById('change-name-btn').onclick = function() {
+      startOverlay.classList.add('hidden');
+      loginOverlay.classList.remove('hidden');
+    };
+
+    document.getElementById('top-lb-btn').onclick = function() {
+      renderLeaderboard();
+      lbOverlay.classList.remove('hidden');
+    };
+
+    document.getElementById('close-lb-btn').onclick = function() {
+      lbOverlay.classList.add('hidden');
+    };
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let snake = [], velocity = { x: 0, y: -1 }, nextVelocity = { x: 0, y: -1 };
+    let food = { x: 5, y: 5 }, score = 0, level = 1, gameSpeed = 120, isPlaying = false, gameTimer = null;
+
+    function spawnFood() {
+      const maxX = Math.max(4, Math.floor(canvas.width / gridSize) - 1);
+      const maxY = Math.max(4, Math.floor((canvas.height - 50) / gridSize) - 1);
+      food = {
+        x: Math.floor(Math.random() * (maxX - 2)) + 1,
+        y: Math.floor(Math.random() * (maxY - 2)) + 1
+      };
+    }
+
+    function updateGameSpeed() {
+      if (gameTimer) clearInterval(gameTimer);
+      gameTimer = setInterval(update, gameSpeed);
+    }
+
+    function startGame() {
+      snake = [
+        { x: Math.floor(canvas.width / gridSize / 2), y: Math.floor((canvas.height - 50) / gridSize / 2) },
+        { x: Math.floor(canvas.width / gridSize / 2), y: Math.floor((canvas.height - 50) / gridSize / 2) + 1 }
+      ];
+      velocity = { x: 0, y: -1 };
+      nextVelocity = { x: 0, y: -1 };
+      score = 0;
+      level = 1;
+      gameSpeed = 120;
+
+      document.getElementById('score-val').innerText = score;
+      document.getElementById('level-val').innerText = level;
+
+      spawnFood();
+      startOverlay.classList.add('hidden');
+      document.getElementById('gameover-screen').classList.add('hidden');
+
+      isPlaying = true;
+      updateGameSpeed();
+    }
+
+    function saveScore(finalScore) {
+      if (finalScore <= 0 || !genuinePlayerName) return;
+      let existing = leaderboardData.find(p => p.name === genuinePlayerName);
+      if (existing) {
+        if (finalScore > existing.score) existing.score = finalScore;
+      } else {
+        leaderboardData.push({ name: genuinePlayerName, score: finalScore });
+      }
+      localStorage.setItem('sg_lb', JSON.stringify(leaderboardData));
+    }
+
+    function gameOver() {
+      isPlaying = false;
+      if (gameTimer) clearInterval(gameTimer);
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('sg_high', highScore);
+        document.getElementById('high-val').innerText = highScore;
+      }
+
+      saveScore(score);
+
+      document.getElementById('final-stats').innerText = "SCORE: " + score + " | LEVEL: " + level;
+      document.getElementById('gameover-screen').classList.remove('hidden');
+
+      showInterstitialAd();
+    }
+
+    function update() {
+      if (!isPlaying) return;
+      velocity = { ...nextVelocity };
+      let headX = snake[0].x + velocity.x;
+      let headY = snake[0].y + velocity.y;
+
+      const tileX = Math.floor(canvas.width / gridSize);
+      const tileY = Math.floor((canvas.height - 50) / gridSize);
+
+      if (headX < 0) headX = tileX - 1;
+      if (headX >= tileX) headX = 0;
+      if (headY < 0) headY = tileY - 1;
+      if (headY >= tileY) headY = 0;
+
+      const head = { x: headX, y: headY };
+
+      for (let i = 0; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) return gameOver();
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        document.getElementById('score-val').innerText = score;
+
+        if (score % 30 === 0) {
+          level += 1;
+          document.getElementById('level-val').innerText = level;
+          if (gameSpeed > 45) {
+            gameSpeed -= 12;
+            updateGameSpeed();
+          }
+        }
+
+        spawnFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "rgba(0, 243, 255, 0.03)";
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#00f3ff'; ctx.fillStyle = '#00f3ff';
+      ctx.beginPath(); ctx.arc(food.x * gridSize + 10, food.y * gridSize + 10, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      snake.forEach((seg, i) => {
+        ctx.save();
+        const isHead = i === 0;
+        ctx.shadowBlur = isHead ? 20 : 8;
+        ctx.shadowColor = isHead ? '#ffffff' : '#00f3ff';
+        ctx.fillStyle = isHead ? '#ffffff' : '#00f3ff';
+        ctx.beginPath();
+        ctx.roundRect(seg.x * gridSize + 1, seg.y * gridSize + 1, gridSize - 2, gridSize - 2, isHead ? 8 : 4);
+        ctx.fill(); ctx.restore();
+      });
+    }
+
+    function changeDir(dir) {
+      if (dir === 'UP' && velocity.y !== 1) nextVelocity = { x: 0, y: -1 };
+      if (dir === 'DOWN' && velocity.y !== -1) nextVelocity = { x: 0, y: 1 };
+      if (dir === 'LEFT' && velocity.x !== 1) nextVelocity = { x: -1, y: 0 };
+      if (dir === 'RIGHT' && velocity.x !== 1) nextVelocity = { x: 1, y: 0 };
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'w') changeDir('UP');
+      if (e.key === 'ArrowDown' || e.key === 's') changeDir('DOWN');
+      if (e.key === 'ArrowLeft' || e.key === 'a') changeDir('LEFT');
+      if (e.key === 'ArrowRight' || e.key === 'd') changeDir('RIGHT');
+    });
+
+    document.getElementById('btn-up').onclick = () => changeDir('UP');
+    document.getElementById('btn-down').onclick = () => changeDir('DOWN');
+    document.getElementById('btn-left').onclick = () => changeDir('LEFT');
+    document.getElementById('btn-right').onclick = () => changeDir('RIGHT');
+
+    document.getElementById('start-btn').onclick = startGame;
+    document.getElementById('restart-btn').onclick = startGame;
+  });
+</script>
+</body>
+</html>
