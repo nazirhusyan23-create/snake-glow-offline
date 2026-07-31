@@ -8,12 +8,6 @@
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
 
-    <platform name="android">
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-9502060049942116~3355184393"/>
-        </config-file>
-    </platform>
-
     <plugin name="cordova-plugin-admob-free" spec="^0.27.0">
         <variable name="ADMOB_APP_ID" value="ca-app-pub-9502060049942116~3355184393" />
     </plugin>
