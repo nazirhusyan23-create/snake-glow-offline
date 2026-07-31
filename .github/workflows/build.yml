@@ -22,25 +22,29 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '11'
+        java-version: '17'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Build Tools
-      run: sdkmanager "build-tools;30.0.3"
+    - name: Install Build Tools & Platform
+      run: |
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
     - name: Install Cordova
       run: npm install -g cordova
 
     - name: Add Android Platform
-      run: cordova platform add android@10.1.2
+      run: cordova platform add android@12.0.1
 
-    - name: Install AdMob Plugin
-      run: cordova plugin add cordova-plugin-admob-free --variable ADMOB_APP_ID="ca-app-pub-9502060049942116~3355184393" --save
+    # NOTE: No separate "cordova plugin add" step needed —
+    # cordova-plugin-admob-free (with ADMOB_APP_ID) is already
+    # declared in config.xml and gets installed automatically
+    # when the Android platform is added.
 
     - name: Build Android Release APK
-      run: cordova build android --release -- --extra-gradle-args="-Xmx2048m"
+      run: cordova build android --release -- --gradleArg=-Xmx2048m
 
     - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
