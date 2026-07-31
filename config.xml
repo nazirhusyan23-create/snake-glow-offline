@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.nazir.snakeglow" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Snake Glow Offline</name>
+    <description>Neon Snake Arcade Game</description>
+    <author email="dev@example.com" href="http://example.com">Nazir</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-9502060049942116~3355184393"/>
+        </config-file>
+    </platform>
+
+    <plugin name="cordova-plugin-admob-free" spec="^0.27.0" />
+</widget>
