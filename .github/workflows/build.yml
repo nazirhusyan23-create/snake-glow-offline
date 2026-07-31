@@ -30,7 +30,7 @@ jobs:
     - name: Add Android Platform & Plugins
       run: |
         cordova platform add android@10.1.2
-        cordova plugin add cordova-plugin-admob-free
+        cordova plugin add cordova-plugin-admob-free --variable ADMOB_APP_ID="ca-app-pub-9502060049942116~3355184393"
 
     - name: Build Android Release APK
       run: cordova build android --release -- --extra-gradle-args="-Xmx2048m"
