@@ -14,5 +14,7 @@
         </config-file>
     </platform>
 
-    <plugin name="cordova-plugin-admob-free" spec="^0.27.0" />
+    <plugin name="cordova-plugin-admob-free" spec="^0.27.0">
+        <variable name="ADMOB_APP_ID" value="ca-app-pub-9502060049942116~3355184393" />
+    </plugin>
 </widget>
