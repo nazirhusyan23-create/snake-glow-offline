@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.nazir.snakeglow" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.wSnakeGlowOffline_20007249" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Snake Glow Offline</name>
     <description>Neon Snake Arcade Game</description>
     <author email="dev@example.com" href="http://example.com">Nazir</author>
