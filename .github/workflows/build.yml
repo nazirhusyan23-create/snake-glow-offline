@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Build APK (Debug + Signed Release)
 
 on:
   push:
@@ -53,13 +53,59 @@ jobs:
         sed -i 's/import android\.support\.annotation\.NonNull;/import androidx.annotation.NonNull;/' \
           platforms/android/app/src/main/java/name/ratson/cordova/admob/AdMob.java
 
+    # ---------- PATH 1: DEBUG APK (auto-signed, installs immediately) ----------
+    - name: Build Android Debug APK
+      env:
+        GRADLE_OPTS: "-Xmx2048m"
+      run: cordova build android --debug -- --packageType=apk
+
+    - name: Upload Debug APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Snake-Glow-Debug-APK
+        path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+
+    # ---------- PATH 2: SIGNED RELEASE APK (needs 3 secrets, see notes) ----------
+    - name: Check if release signing secrets are configured
+      id: check_secrets
+      run: |
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ] && [ -n "${{ secrets.KEYSTORE_PASSWORD }}" ] && [ -n "${{ secrets.KEY_PASSWORD }}" ]; then
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Build Android Release APK
+      if: steps.check_secrets.outputs.ready == 'true'
       env:
         GRADLE_OPTS: "-Xmx2048m"
       run: cordova build android --release -- --packageType=apk
 
-    - name: Upload Release APK Artifact
+    - name: Decode Keystore
+      if: steps.check_secrets.outputs.ready == 'true'
+      run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.keystore
+
+    - name: Sign & Align Release APK
+      if: steps.check_secrets.outputs.ready == 'true'
+      run: |
+        BUILD_TOOLS=$ANDROID_HOME/build-tools/33.0.2
+        $BUILD_TOOLS/zipalign -v -p 4 \
+          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk \
+          app-release-aligned.apk
+        $BUILD_TOOLS/apksigner sign \
+          --ks release-key.keystore \
+          --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+          --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+          --out app-release-signed.apk \
+          app-release-aligned.apk
+
+    - name: Upload Signed Release APK
+      if: steps.check_secrets.outputs.ready == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Snake-Glow-Release-APK
-        path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: Snake-Glow-Release-APK-Signed
+        path: app-release-signed.apk
+
+    - name: Skip release signing (secrets not set)
+      if: steps.check_secrets.outputs.ready == 'false'
+      run: echo "Skipping signed release build — add KEYSTORE_BASE64, KEYSTORE_PASSWORD, and KEY_PASSWORD secrets to enable it."
